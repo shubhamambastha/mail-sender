@@ -1,5 +1,5 @@
-const { v4: uuidv4 } = require("uuid");
 const dbService = require("../services/dbService");
+const trackingService = require("../services/trackingService");
 
 /**
  * @swagger
@@ -13,12 +13,8 @@ const dbService = require("../services/dbService");
  *         description: Internal server error
  */
 const generateTrackingUrl = async (req, res) => {
-  const trackingId = uuidv4();
-  await dbService.setTrackingData(trackingId, {
-    created: new Date().toISOString(),
-    opens: "0",
-  });
-  return `${process.env.BASE_URL}/track/${trackingId}`;
+  const trackingUrl = await trackingService.createTrackingUrl();
+  res.json({ trackingUrl });
 };
 
 /**
@@ -40,28 +36,28 @@ const generateTrackingUrl = async (req, res) => {
  */
 const getTrackById = async (req, res) => {
   try {
-  const { id } = req.params;
-  const trackData = await dbService.getTrackingData(id);
+    const { id } = req.params;
+    const trackData = await dbService.getTrackingData(id);
 
     if (trackData) {
       const opens = trackData.opens + 1;
-    await dbService.setTrackingData(id, {
+      await dbService.setTrackingData(id, {
         opens,
         lastOpened: new Date(),
-    });
-  }
+      });
+    }
 
-  // Send a 1x1 transparent GIF
-  res.writeHead(200, {
-    "Content-Type": "image/gif",
-    "Content-Length": "43",
-  });
-  res.end(
-    Buffer.from(
-      "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
-      "base64"
-    )
-  );
+    // Send a 1x1 transparent GIF
+    res.writeHead(200, {
+      "Content-Type": "image/gif",
+      "Content-Length": "43",
+    });
+    res.end(
+      Buffer.from(
+        "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+        "base64"
+      )
+    );
   } catch (error) {
     console.error("Error tracking email open:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -87,12 +83,12 @@ const getTrackById = async (req, res) => {
  */
 const getTrackingData = async (req, res) => {
   try {
-  const { id } = req.params;
-  const trackData = await dbService.getTrackingData(id);
+    const { id } = req.params;
+    const trackData = await dbService.getTrackingData(id);
 
     if (trackData) {
-    res.json(trackData);
-  } else {
+      res.json(trackData);
+    } else {
       res.status(404).json({ error: "Tracking ID not found" });
     }
   } catch (error) {

@@ -1,7 +1,7 @@
 const axios = require("axios");
-const { generateTrackingUrl } = require("./trackerController");
 const { createTransporter } = require("../services/emailService");
 const { generateEmailTemplate } = require("../utils/emailTemplates");
+const { createTrackingUrl } = require("../services/trackingService");
 
 async function checkTrackingData(
   trackingId,
