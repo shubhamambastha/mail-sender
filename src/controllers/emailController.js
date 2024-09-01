@@ -30,25 +30,6 @@ async function checkTrackingData(
   checkData();
 }
 
-async function sendEmailWithTracking(name) {
-  try {
-    const trackingUrl = await generateTrackingUrl();
-    const emailHtml = generateEmailTemplate(name, trackingUrl);
-
-    // Here you would typically send the email using your preferred email sending library
-    console.log(`Sending email to with tracking URL: ${trackingUrl}`);
-
-    // For demonstration, let's log the tracking data after a short delay
-    const trackingId = trackingUrl.split("/").pop();
-    checkTrackingData(trackingId); // Start checking tracking data
-
-    return emailHtml;
-  } catch (error) {
-    console.error("Error sending email with tracking:", error);
-    throw error;
-  }
-}
-
 /**
  * @swagger
  * /email/send-email:
@@ -80,18 +61,20 @@ async function sendEmailWithTracking(name) {
  *       500:
  *         description: Internal server error
  */
-const sendEmailHandler = async (req, res) => {
-  const { email, subject, name } = req.body;
-
-  if (!email || !subject || !name) {
-    return res
-      .status(400)
-      .json({ message: "Email, subject, and name are required." });
-  }
-
+const sendEmailWithTracking = async (req, res) => {
   try {
+    const { email, subject, name } = req.body;
+
+    if (!email || !subject || !name) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
     const transporter = await createTransporter();
-    const emailHtml = await sendEmailWithTracking(name);
+    const trackingUrl = await createTrackingUrl();
+    const emailHtml = generateEmailTemplate(name, trackingUrl);
+
+    // Here you would typically send the email using your preferred email sending library
+    console.log(`Sending email to ${email} with tracking URL: ${trackingUrl}`);
 
     const mailOptions = {
       from: process.env.GMAIL_USER, // sender address
@@ -102,19 +85,22 @@ const sendEmailHandler = async (req, res) => {
 
     // Send email
     const info = await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully:", info.messageId);
-    res
-      .status(200)
-      .json({ message: "Email sent successfully!", messageId: info.messageId });
+
+    // For demonstration, let's log the tracking data after a short delay
+    const trackingId = trackingUrl.split("/").pop();
+    checkTrackingData(trackingId); // Start checking tracking data
+
+    res.json({
+      message: "Email sent successfully",
+      trackingUrl,
+      messageId: info.messageId,
+    });
   } catch (error) {
-    console.error("Error in sendEmailHandler:", error);
-    res
-      .status(500)
-      .json({ message: "Error sending email", error: error.message });
+    console.error("Error sending email with tracking:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 module.exports = {
   sendEmailWithTracking,
-  sendEmailHandler,
 };
