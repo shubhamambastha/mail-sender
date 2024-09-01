@@ -39,6 +39,7 @@ const generateTrackingUrl = async (req, res) => {
  *         description: Tracking ID not found
  */
 const getTrackById = async (req, res) => {
+  try {
   const { id } = req.params;
   const trackData = await dbService.getTrackingData(id);
 
@@ -61,6 +62,10 @@ const getTrackById = async (req, res) => {
       "base64"
     )
   );
+  } catch (error) {
+    console.error("Error tracking email open:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
 /**
@@ -81,13 +86,17 @@ const getTrackById = async (req, res) => {
  *         description: Tracking ID not found
  */
 const getTrackingData = async (req, res) => {
+  try {
   const { id } = req.params;
   const trackData = await dbService.getTrackingData(id);
 
   if (Object.keys(trackData).length > 0) {
     res.json(trackData);
   } else {
-    res.json({ error: "Tracking ID not found" });
+    }
+  } catch (error) {
+    console.error("Error getting tracking data:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
