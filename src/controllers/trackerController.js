@@ -43,11 +43,11 @@ const getTrackById = async (req, res) => {
   const { id } = req.params;
   const trackData = await dbService.getTrackingData(id);
 
-  if (Object.keys(trackData).length > 0) {
-    const opens = parseInt(trackData.opens) + 1;
+    if (trackData) {
+      const opens = trackData.opens + 1;
     await dbService.setTrackingData(id, {
-      opens: opens.toString(),
-      lastOpened: new Date().toISOString(),
+        opens,
+        lastOpened: new Date(),
     });
   }
 
@@ -90,9 +90,10 @@ const getTrackingData = async (req, res) => {
   const { id } = req.params;
   const trackData = await dbService.getTrackingData(id);
 
-  if (Object.keys(trackData).length > 0) {
+    if (trackData) {
     res.json(trackData);
   } else {
+      res.status(404).json({ error: "Tracking ID not found" });
     }
   } catch (error) {
     console.error("Error getting tracking data:", error);
