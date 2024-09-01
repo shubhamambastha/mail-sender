@@ -1,4 +1,5 @@
 const { Sequelize } = require("sequelize");
+const { Umzug, SequelizeStorage } = require("umzug");
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
@@ -10,13 +11,26 @@ const sequelize = new Sequelize(
   }
 );
 
+const umzug = new Umzug({
+  migrations: { glob: "migrations/*.js" },
+  context: sequelize.getQueryInterface(),
+  storage: new SequelizeStorage({ sequelize }),
+  logger: console,
+});
+
 const initializeDatabase = async () => {
   try {
     await sequelize.authenticate();
     console.log("Connection has been established successfully.");
-    await sequelize.sync();
+
+    // Run migrations
+    await umzug.up();
+    console.log("Migrations have been executed successfully.");
   } catch (error) {
-    console.error("Unable to connect to the database:", error);
+    console.error(
+      "Unable to connect to the database or run migrations:",
+      error
+    );
     process.exit(1);
   }
 };
