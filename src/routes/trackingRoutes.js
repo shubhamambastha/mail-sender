@@ -1,10 +1,14 @@
 const express = require("express");
-const trackerController = require("../controllers/trackerController");
+const {
+  generateTrackingUrl,
+  getTrackById,
+  getTrackingData,
+} = require("../controllers/trackerController");
 
 const router = express.Router();
 
-router.get("/generate-tracking-url", trackerController.generateTrackingUrl);
-router.get("/track/:id", trackerController.getTrackById);
-router.get("/tracking-data/:id", trackerController.getTrackingData);
+router.get("/generate-tracking-url", generateTrackingUrl);
+router.get("/track/:id", getTrackById);
+router.get("/tracking-data/:id", getTrackingData);
 
 module.exports = router;
