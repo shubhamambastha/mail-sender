@@ -1,6 +1,4 @@
-const axios = require("axios");
-const { createTransporter } = require("../services/emailService");
-const { generateEmailTemplate } = require("../utils/emailTemplates");
+const { sendEmailWithTracking } = require("../services/emailService");
 const { createTrackingUrl } = require("../services/trackingService");
 
 async function checkTrackingData(
@@ -61,7 +59,7 @@ async function checkTrackingData(
  *       500:
  *         description: Internal server error
  */
-const sendEmailWithTracking = async (req, res) => {
+const sendEmailHandler = async (req, res) => {
   try {
     const { email, subject, name } = req.body;
 
@@ -69,22 +67,11 @@ const sendEmailWithTracking = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const transporter = await createTransporter();
-    const trackingUrl = await createTrackingUrl();
-    const emailHtml = generateEmailTemplate(name, trackingUrl);
-
-    // Here you would typically send the email using your preferred email sending library
-    console.log(`Sending email to ${email} with tracking URL: ${trackingUrl}`);
-
-    const mailOptions = {
-      from: process.env.GMAIL_USER, // sender address
-      to: email, // receiver address
-      subject: subject, // Subject line
-      html: emailHtml, // email body
-    };
-
-    // Send email
-    const info = await transporter.sendMail(mailOptions);
+    const { trackingUrl, messageId } = await sendEmailWithTracking({
+      to: email,
+      type: subject, // Assuming subject is used as type
+      data: { name },
+    });
 
     // For demonstration, let's log the tracking data after a short delay
     const trackingId = trackingUrl.split("/").pop();
@@ -93,7 +80,7 @@ const sendEmailWithTracking = async (req, res) => {
     res.json({
       message: "Email sent successfully",
       trackingUrl,
-      messageId: info.messageId,
+      messageId,
     });
   } catch (error) {
     console.error("Error sending email with tracking:", error);
@@ -102,5 +89,5 @@ const sendEmailWithTracking = async (req, res) => {
 };
 
 module.exports = {
-  sendEmailWithTracking,
+  sendEmailHandler,
 };
