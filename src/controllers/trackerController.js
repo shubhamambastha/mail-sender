@@ -1,4 +1,3 @@
-const dbService = require("../services/dbService");
 const trackingService = require("../services/trackingService");
 
 /**
@@ -13,8 +12,13 @@ const trackingService = require("../services/trackingService");
  *         description: Internal server error
  */
 const generateTrackingUrl = async (req, res) => {
-  const trackingUrl = await trackingService.createTrackingUrl();
-  res.json({ trackingUrl });
+  try {
+    const trackingUrl = await trackingService.createTrackingUrl();
+    res.json({ trackingUrl });
+  } catch (error) {
+    console.error("Error generating tracking URL:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
 /**
@@ -37,15 +41,7 @@ const generateTrackingUrl = async (req, res) => {
 const getTrackById = async (req, res) => {
   try {
     const { id } = req.params;
-    const trackData = await dbService.getTrackingData(id);
-
-    if (trackData) {
-      const opens = trackData.opens + 1;
-      await dbService.setTrackingData(id, {
-        opens,
-        lastOpened: new Date(),
-      });
-    }
+    await trackingService.trackEmailOpen(id);
 
     // Send a 1x1 transparent GIF
     res.writeHead(200, {
@@ -84,7 +80,7 @@ const getTrackById = async (req, res) => {
 const getTrackingData = async (req, res) => {
   try {
     const { id } = req.params;
-    const trackData = await dbService.getTrackingData(id);
+    const trackData = await trackingService.getTrackingData(id);
 
     if (trackData) {
       res.json(trackData);

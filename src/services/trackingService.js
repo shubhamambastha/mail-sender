@@ -10,4 +10,20 @@ const createTrackingUrl = async () => {
   return `${process.env.BASE_URL}/track/${trackingId}`;
 };
 
-module.exports = { createTrackingUrl };
+const trackEmailOpen = async (trackingId) => {
+  const trackData = await dbService.getTrackingData(trackingId);
+
+  if (trackData) {
+    const opens = trackData.opens + 1;
+    await dbService.setTrackingData(trackingId, {
+      opens,
+      lastOpened: new Date(),
+    });
+  }
+};
+
+const getTrackingData = async (trackingId) => {
+  return await dbService.getTrackingData(trackingId);
+};
+
+module.exports = { createTrackingUrl, trackEmailOpen, getTrackingData };
