@@ -1,29 +1,24 @@
 const nodemailer = require("nodemailer");
 const { createTrackingUrl } = require("./trackingService");
+const EmailTemplate = require("../models/EmailTemplate");
 
-function generateTemplate(type, data) {
-  switch (type) {
-    case "resume":
-      return {
-        subject: "Your Resume Application",
-        text: `Dear ${data.name},\n\nThank you for submitting your resume. We will review it and get back to you soon.\n\nBest regards,\nThe HR Team`,
-        html: `<p>Dear ${data.name},</p><p>Thank you for submitting your resume. We will review it and get back to you soon.</p><p>Best regards,<br>The HR Team</p>`,
-      };
-    case "marketing":
-      return {
-        subject: "Exciting New Product Coming Soon!",
-        text: `Dear ${data.name},\n\nWe're thrilled to announce our upcoming product launch. Stay tuned for more details!\n\nBest regards,\nThe Marketing Team`,
-        html: `<p>Dear ${data.name},</p><p>We're thrilled to announce our upcoming product launch. Stay tuned for more details!</p><p>Best regards,<br>The Marketing Team</p>`,
-      };
-    case "business":
-      return {
-        subject: "New Business Launch Announcement",
-        text: `Dear ${data.name},\n\nWe're excited to inform you about the launch of our new business. We look forward to serving you!\n\nBest regards,\nThe Business Development Team`,
-        html: `<p>Dear ${data.name},</p><p>We're excited to inform you about the launch of our new business. We look forward to serving you!</p><p>Best regards,<br>The Business Development Team</p>`,
-      };
-    default:
-      throw new Error("Invalid email type");
+async function generateTemplate(id) {
+  const template = await EmailTemplate.findOne({
+    where: { id: id },
+  });
+
+  if (!template) {
+    throw new Error("Invalid email type");
   }
+
+  // Replace variables in the template
+  let html = template.html;
+  Object.entries(data).forEach(([key, value]) => {
+    const regex = new RegExp(`{${key}}`, "g");
+    html = html.replace(regex, value);
+  });
+
+  return html;
 }
 
 async function createTransporter() {
@@ -43,7 +38,7 @@ async function sendEmail({ to, type, data }) {
     throw new Error("Email type and data are required");
   }
 
-  const template = generateTemplate(type, data);
+  const template = generateTemplate(id);
   const transporter = await createTransporter();
   const mailOptions = {
     from: process.env.GMAIL_USER,
