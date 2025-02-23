@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../config/sequelize");
+const { sequelize } = require("../config/database");
 
 const TrackingData = sequelize.define(
   "TrackingData",
@@ -8,11 +8,6 @@ const TrackingData = sequelize.define(
       type: DataTypes.STRING,
       primaryKey: true,
       field: "tracking_id",
-    },
-    created: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      field: "created",
     },
     opens: {
       type: DataTypes.INTEGER,
