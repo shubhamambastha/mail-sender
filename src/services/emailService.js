@@ -33,7 +33,7 @@ async function createTransporter() {
   });
 }
 
-async function sendEmail({ to, type, data }) {
+async function sendEmail({ to, id, data }) {
   if (!type || !data) {
     throw new Error("Email type and data are required");
   }
@@ -43,9 +43,8 @@ async function sendEmail({ to, type, data }) {
   const mailOptions = {
     from: process.env.GMAIL_USER,
     to,
-    subject: template.subject,
-    text: template.text,
-    html: template.html,
+    subject: data.subject,
+    html: template,
   };
 
   try {
@@ -58,10 +57,10 @@ async function sendEmail({ to, type, data }) {
   }
 }
 
-async function sendEmailWithTracking({ to, type, data }) {
+async function sendEmailWithTracking({ to, subject, data }) {
   const trackingUrl = await createTrackingUrl();
   const updatedData = { ...data, trackingUrl };
-  const info = await sendEmail({ to, type, data: updatedData });
+  const info = await sendEmail({ to, subject, data: updatedData });
   return { trackingUrl, messageId: info.messageId, updatedData };
 }
 

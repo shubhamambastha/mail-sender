@@ -61,16 +61,16 @@ async function checkTrackingData(
  */
 const sendEmailHandler = async (req, res) => {
   try {
-    const { email, subject, name } = req.body;
+    const { email, subject, templateId, variables } = req.body;
 
-    if (!email || !subject || !name) {
+    if (!email || !subject || !variables) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
     const { trackingUrl, messageId } = await sendEmailWithTracking({
       to: email,
-      type: subject, // Assuming subject is used as type
-      data: { name },
+      subject, // Assuming subject is used as type
+      data: { templateId, ...variables },
     });
 
     // For demonstration, let's log the tracking data after a short delay
