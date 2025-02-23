@@ -65,9 +65,9 @@ async function sendEmail({ to, type, data }) {
 
 async function sendEmailWithTracking({ to, type, data }) {
   const trackingUrl = await createTrackingUrl();
-  data.trackingUrl = trackingUrl;
-  const info = await sendEmail({ to, type, data });
-  return { trackingUrl, messageId: info.messageId };
+  const updatedData = { ...data, trackingUrl };
+  const info = await sendEmail({ to, type, data: updatedData });
+  return { trackingUrl, messageId: info.messageId, updatedData };
 }
 
 module.exports = {

@@ -1,5 +1,5 @@
+const axios = require("axios");
 const { sendEmailWithTracking } = require("../services/emailService");
-const { createTrackingUrl } = require("../services/trackingService");
 
 async function checkTrackingData(
   trackingId,
