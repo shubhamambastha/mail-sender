@@ -1,15 +1,9 @@
 const nodemailer = require("nodemailer");
 const { createTrackingUrl } = require("./trackingService");
-const EmailTemplate = require("../models/EmailTemplate");
+const templateService = require("./templateService");
 
-async function generateTemplate(id) {
-  const template = await EmailTemplate.findOne({
-    where: { id: id },
-  });
-
-  if (!template) {
-    throw new Error("Invalid email type");
-  }
+async function generateTemplate(id, data = {}) {
+  const template = await templateService.getById(id);
 
   // Replace variables in the template
   let html = template.html;
@@ -34,11 +28,11 @@ async function createTransporter() {
 }
 
 async function sendEmail({ to, id, data }) {
-  if (!type || !data) {
-    throw new Error("Email type and data are required");
+  if (!id || !data) {
+    throw new Error("Email template ID and data are required");
   }
 
-  const template = generateTemplate(id);
+  const template = await generateTemplate(id, data);
   const transporter = await createTransporter();
   const mailOptions = {
     from: process.env.GMAIL_USER,
@@ -49,7 +43,7 @@ async function sendEmail({ to, id, data }) {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`Email sent successfully to ${to} with type: ${type}`);
+    console.log(`Email sent successfully to ${to} with template ID: ${id}`);
     return info;
   } catch (error) {
     console.error("Error sending email:", error);
@@ -57,10 +51,10 @@ async function sendEmail({ to, id, data }) {
   }
 }
 
-async function sendEmailWithTracking({ to, subject, data }) {
+async function sendEmailWithTracking({ to, id, data }) {
   const trackingUrl = await createTrackingUrl();
   const updatedData = { ...data, trackingUrl };
-  const info = await sendEmail({ to, subject, data: updatedData });
+  const info = await sendEmail({ to, id, data: updatedData });
   return { trackingUrl, messageId: info.messageId, updatedData };
 }
 
