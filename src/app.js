@@ -13,8 +13,8 @@ const app = express();
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use("/", routes);
+// Routes: Version 1
+app.use("/api/v1", routes);
 
 // Swagger UI route
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
