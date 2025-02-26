@@ -61,26 +61,66 @@ async function checkTrackingData(
  */
 const sendEmailHandler = async (req, res) => {
   try {
-    const { email, subject, templateId, variables } = req.body;
+    const { templateId, entities } = req.body;
 
-    if (!email || !subject || !variables) {
-      return res.status(400).json({ error: "Missing required fields" });
+    if (!Array.isArray(entities) || entities.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "Entities must be a non-empty array" });
     }
 
-    const { trackingUrl, messageId } = await sendEmailWithTracking({
-      to: email,
-      subject, // Assuming subject is used as type
-      data: { templateId, ...variables },
-    });
+    const results = [];
+    const errors = [];
 
-    // For demonstration, let's log the tracking data after a short delay
-    const trackingId = trackingUrl.split("/").pop();
-    checkTrackingData(trackingId); // Start checking tracking data
+    // Process each entity in the array
+    for (const entity of entities) {
+      const {
+        email,
+        subject,
+        recruiterName,
+        companyName,
+        jobDesignation,
+        ...otherVariables
+      } = entity;
+
+      if (!email || !subject) {
+        errors.push({ email, error: "Missing required fields" });
+        continue;
+      }
+
+      const { trackingUrl, messageId } = await sendEmailWithTracking({
+        to: email,
+        subject, // Assuming subject is used as type
+        data: {
+          templateId,
+          recruiterName,
+          companyName,
+          jobDesignation,
+          ...otherVariables,
+        },
+      });
+
+      try {
+        // For demonstration, let's log the tracking data after a short delay
+        const trackingId = trackingUrl.split("/").pop();
+        checkTrackingData(trackingId); // Start checking tracking data
+
+        results.push({
+          email,
+          status: "success",
+          trackingUrl,
+          messageId,
+        });
+      } catch (error) {
+        console.error(`Error sending email to ${email}:`, error);
+        errors.push({ email, error: "Failed to send email" });
+      }
+    }
 
     res.json({
-      message: "Email sent successfully",
-      trackingUrl,
-      messageId,
+      message: `Processed ${entities.length} emails`,
+      results,
+      errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
     console.error("Error sending email with tracking:", error);
